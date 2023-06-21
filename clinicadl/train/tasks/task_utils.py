@@ -45,6 +45,7 @@ def task_launcher(network_task: str, task_options_list: List[str], **kwargs):
         "evaluation_steps",
         "gpu",
         "learning_rate",
+        "mlflow_bool",
         "multi_cohort",
         "multi_network",
         "n_proc",
@@ -63,7 +64,9 @@ def task_launcher(network_task: str, task_options_list: List[str], **kwargs):
         "transfer_path",
     ]
     all_options_list = standard_options_list + task_options_list
-
+    print(kwargs)
+    for i in kwargs:
+        print(i)
     for option in all_options_list:
         if (kwargs[option] is not None and not isinstance(kwargs[option], tuple)) or (
             isinstance(kwargs[option], tuple) and len(kwargs[option]) != 0

@@ -264,6 +264,12 @@ profiler = cli_param.option_group.optimization_group.option(
     help="Use `--profiler` to enable Pytorch profiler for the first 30 steps after a short warmup. "
     "It will make an execution trace and some statistics about the CPU and GPU usage.",
 )
+mlflow_bool = cli_param.option_group.optimization_group.option(
+    "--mlflow_bool/--no-mlflow",
+    type=bool,
+    default=None,
+    help="Use `--mlflow` to enable mlflow during the training. ",
+)
 # transfer learning
 transfer_path = cli_param.option_group.transfer_learning_group.option(
     "-tp",

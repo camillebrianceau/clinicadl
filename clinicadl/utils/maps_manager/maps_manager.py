@@ -5,7 +5,10 @@ from datetime import datetime
 from logging import getLogger
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
+from urllib.parse import urlparse
 
+import mlflow
+import mlflow.sklearn
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader
@@ -844,125 +847,152 @@ class MapsManager:
         retain_best = RetainBest(selection_metrics=list(self.selection_metrics))
 
         profiler = self._init_profiler()
+        if self.mlflow_bool:
+            mlflow.set_experiment(f"{self.maps_path}")
+            mlflow.sklearn.autolog()
 
-        while epoch < self.epochs and not early_stopping.step(metrics_valid["loss"]):
-            logger.info(f"Beginning epoch {epoch}.")
+        with mlflow.start_run(run_name="exp1"):
+            while epoch < self.epochs and not early_stopping.step(
+                metrics_valid["loss"]
+            ):
+                logger.info(f"Beginning epoch {epoch}.")
 
-            model.zero_grad()
-            evaluation_flag, step_flag = True, True
+                model.zero_grad()
+                evaluation_flag, step_flag = True, True
 
-            with profiler:
-                for i, data in enumerate(train_loader):
-                    _, loss_dict = model.compute_outputs_and_loss(data, criterion)
-                    logger.debug(f"Train loss dictionnary {loss_dict}")
-                    loss = loss_dict["loss"]
-                    loss.backward()
+                with profiler:
+                    for i, data in enumerate(train_loader):
+                        _, loss_dict = model.compute_outputs_and_loss(data, criterion)
+                        logger.debug(f"Train loss dictionnary {loss_dict}")
+                        loss = loss_dict["loss"]
+                        loss.backward()
+                        mlflow.log_metric("loss", loss)
 
-                    if (i + 1) % self.accumulation_steps == 0:
-                        step_flag = False
-                        optimizer.step()
-                        optimizer.zero_grad()
+                        if (i + 1) % self.accumulation_steps == 0:
+                            step_flag = False
+                            optimizer.step()
+                            optimizer.zero_grad()
+                            del loss
 
-                        del loss
+                            # Evaluate the model only when no gradients are accumulated
+                            if (
+                                self.evaluation_steps != 0
+                                and (i + 1) % self.evaluation_steps == 0
+                            ):
+                                evaluation_flag = False
 
-                        # Evaluate the model only when no gradients are accumulated
-                        if (
-                            self.evaluation_steps != 0
-                            and (i + 1) % self.evaluation_steps == 0
-                        ):
-                            evaluation_flag = False
+                                _, metrics_train = self.task_manager.test(
+                                    model, train_loader, criterion
+                                )
+                                _, metrics_valid = self.task_manager.test(
+                                    model, valid_loader, criterion
+                                )
 
-                            _, metrics_train = self.task_manager.test(
-                                model, train_loader, criterion
-                            )
-                            _, metrics_valid = self.task_manager.test(
-                                model, valid_loader, criterion
-                            )
+                                model.train()
+                                train_loader.dataset.train()
 
-                            model.train()
-                            train_loader.dataset.train()
+                                log_writer.step(
+                                    epoch,
+                                    i,
+                                    metrics_train,
+                                    metrics_valid,
+                                    len(train_loader),
+                                )
 
-                            log_writer.step(
-                                epoch,
-                                i,
-                                metrics_train,
-                                metrics_valid,
-                                len(train_loader),
-                            )
-                            logger.info(
-                                f"{self.mode} level training loss is {metrics_train['loss']} "
-                                f"at the end of iteration {i}"
-                            )
-                            logger.info(
-                                f"{self.mode} level validation loss is {metrics_valid['loss']} "
-                                f"at the end of iteration {i}"
-                            )
+                                mlflow.log_metric("loss_train", metrics_train["loss"])
+                                mlflow.log_metric("loss_valid", metrics_valid["loss"])
 
-                    profiler.step()
+                                logger.info(
+                                    f"{self.mode} level training loss is {metrics_train['loss']} "
+                                    f"at the end of iteration {i}"
+                                )
+                                logger.info(
+                                    f"{self.mode} level validation loss is {metrics_valid['loss']} "
+                                    f"at the end of iteration {i}"
+                                )
 
-            # If no step has been performed, raise Exception
-            if step_flag:
-                raise Exception(
-                    "The model has not been updated once in the epoch. The accumulation step may be too large."
+                        profiler.step()
+
+                # If no step has been performed, raise Exception
+                if step_flag:
+                    raise Exception(
+                        "The model has not been updated once in the epoch. The accumulation step may be too large."
+                    )
+
+                # If no evaluation has been performed, warn the user
+                elif evaluation_flag and self.evaluation_steps != 0:
+                    logger.warning(
+                        f"Your evaluation steps {self.evaluation_steps} are too big "
+                        f"compared to the size of the dataset. "
+                        f"The model is evaluated only once at the end epochs."
+                    )
+
+                # Update weights one last time if gradients were computed without update
+                if (i + 1) % self.accumulation_steps != 0:
+                    optimizer.step()
+                    optimizer.zero_grad()
+
+                # Always test the results and save them once at the end of the epoch
+                model.zero_grad()
+                logger.debug(f"Last checkpoint at the end of the epoch {epoch}")
+
+                _, metrics_train = self.task_manager.test(
+                    model, train_loader, criterion
+                )
+                _, metrics_valid = self.task_manager.test(
+                    model, valid_loader, criterion
                 )
 
-            # If no evaluation has been performed, warn the user
-            elif evaluation_flag and self.evaluation_steps != 0:
-                logger.warning(
-                    f"Your evaluation steps {self.evaluation_steps} are too big "
-                    f"compared to the size of the dataset. "
-                    f"The model is evaluated only once at the end epochs."
+                model.train()
+                train_loader.dataset.train()
+
+                log_writer.step(
+                    epoch, i, metrics_train, metrics_valid, len(train_loader)
+                )
+                mlflow.log_metric("loss_train", metrics_train["loss"])
+                mlflow.log_metric("loss_valid", metrics_valid["loss"])
+                logger.info(
+                    f"{self.mode} level training loss is {metrics_train['loss']} "
+                    f"at the end of iteration {i}"
+                )
+                logger.info(
+                    f"{self.mode} level validation loss is {metrics_valid['loss']} "
+                    f"at the end of iteration {i}"
                 )
 
-            # Update weights one last time if gradients were computed without update
-            if (i + 1) % self.accumulation_steps != 0:
-                optimizer.step()
-                optimizer.zero_grad()
+                # Save checkpoints and best models
+                best_dict = retain_best.step(metrics_valid)
+                self._write_weights(
+                    {
+                        "model": model.state_dict(),
+                        "epoch": epoch,
+                        "name": self.architecture,
+                    },
+                    best_dict,
+                    split,
+                    network=network,
+                )
+                self._write_weights(
+                    {
+                        "optimizer": optimizer.state_dict(),
+                        "epoch": epoch,
+                        "name": self.optimizer,
+                    },
+                    None,
+                    split,
+                    filename="optimizer.pth.tar",
+                )
 
-            # Always test the results and save them once at the end of the epoch
-            model.zero_grad()
-            logger.debug(f"Last checkpoint at the end of the epoch {epoch}")
+                epoch += 1
 
-            _, metrics_train = self.task_manager.test(model, train_loader, criterion)
-            _, metrics_valid = self.task_manager.test(model, valid_loader, criterion)
+            tracking_url_type_store = urlparse(mlflow.get_tracking_uri()).scheme
 
-            model.train()
-            train_loader.dataset.train()
-
-            log_writer.step(epoch, i, metrics_train, metrics_valid, len(train_loader))
-            logger.info(
-                f"{self.mode} level training loss is {metrics_train['loss']} "
-                f"at the end of iteration {i}"
-            )
-            logger.info(
-                f"{self.mode} level validation loss is {metrics_valid['loss']} "
-                f"at the end of iteration {i}"
-            )
-
-            # Save checkpoints and best models
-            best_dict = retain_best.step(metrics_valid)
-            self._write_weights(
-                {
-                    "model": model.state_dict(),
-                    "epoch": epoch,
-                    "name": self.architecture,
-                },
-                best_dict,
-                split,
-                network=network,
-            )
-            self._write_weights(
-                {
-                    "optimizer": optimizer.state_dict(),
-                    "epoch": epoch,
-                    "name": self.optimizer,
-                },
-                None,
-                split,
-                filename="optimizer.pth.tar",
-            )
-
-            epoch += 1
+        # mlflow.log_metric(loss)
+        # mlflow.log_metric(loss)
+        # mlflow.log_metric(loss)
+        # mlflow.log_param(epoch)
+        # mlflow.log_param
+        # mlflow.log_model
 
         self._test_loader(
             train_loader,

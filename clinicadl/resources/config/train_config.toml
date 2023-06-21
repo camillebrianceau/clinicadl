@@ -76,4 +76,5 @@ patience = 0
 tolerance = 0.0
 accumulation_steps = 1
 profiler = false
+mlflow_bool = false
 
