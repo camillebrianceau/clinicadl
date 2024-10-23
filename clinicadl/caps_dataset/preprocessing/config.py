@@ -24,6 +24,7 @@ class PreprocessingConfig(BaseModel):
     Abstract config class for the preprocessing procedure.
     """
 
+    # prepare_dl: bool = False
     tsv_file: Optional[Path] = None
     preprocessing: Preprocessing
     file_type: Optional[FileType] = None

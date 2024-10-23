@@ -358,11 +358,18 @@ class Trainer:
         num_replicas: Optional[int] = None,
         homemade_sampler: bool = False,
     ):
+        from clinicadl.caps_dataset.utils import get_preprocessing_and_mode_from_json
+
+        preprocessing, extraction = get_preprocessing_and_mode_from_json(
+            self.config.maps_manager.maps_dir / "maps.json"
+        )
+
         dataset = return_dataset(
             input_dir=self.config.data.caps_directory,
             data_df=data_df,
-            preprocessing_dict=self.config.data.preprocessing_dict,
-            transforms_config=self.config.transforms,
+            preprocessing=preprocessing,
+            extraction=extraction,
+            transforms=self.config.transforms,
             multi_cohort=self.config.data.multi_cohort,
             label=self.config.data.label,
             label_code=self.config.data.label_code,

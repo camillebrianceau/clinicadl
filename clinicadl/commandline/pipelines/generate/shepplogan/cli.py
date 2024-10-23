@@ -6,6 +6,8 @@ import pandas as pd
 import torch
 from joblib import Parallel, delayed
 
+from clinicadl.caps_dataset.extraction.config import ExtractionSliceConfig
+from clinicadl.caps_dataset.preprocessing.config import CustomPreprocessingConfig
 from clinicadl.commandline import arguments
 from clinicadl.commandline.modules_options import data, dataloader
 from clinicadl.commandline.pipelines.generate.shepplogan import options as shepplogan
@@ -13,6 +15,11 @@ from clinicadl.generate.generate_config import GenerateSheppLoganConfig
 from clinicadl.generate.generate_utils import (
     generate_shepplogan_phantom,
     write_missing_mods,
+)
+from clinicadl.utils.enum import (
+    ExtractionMethod,
+    SliceDirection,
+    SliceMode,
 )
 from clinicadl.utils.iotools.clinica_utils import FileType
 from clinicadl.utils.iotools.iotools import check_and_clean, commandline_to_json
@@ -119,24 +126,30 @@ def cli(generated_caps_directory, n_subjects, n_proc, **kwargs):
     # Save data
     data_df.to_csv(generated_caps_directory / "data.tsv", sep="\t", index=False)
 
-    # Save preprocessing JSON file
-    preprocessing_dict = {
-        "preprocessing": "custom",
-        "mode": "slice",
-        "use_uncropped_image": False,
-        "prepare_dl": True,
-        "extract_json": generate_config.extract_json,
-        "slice_direction": 2,
-        "slice_mode": "single",
-        "discarded_slices": 0,
-        "num_slices": 1,
-        "file_type": FileType(
+    preprocessing = CustomPreprocessingConfig(
+        file_type=FileType(
             pattern="*_space-SheppLogan_phantom.nii.gz",
             description="Custom suffix",
             needed_pipeline="shepplogan",
-        ).model_dump(),
-    }
-    write_preprocessing(preprocessing_dict, generated_caps_directory)
+        ),
+        use_uncropped_image=False,
+    )
+    extraction = ExtractionSliceConfig(
+        slice_direction=SliceDirection.AXIAL,
+        slice_mode=SliceMode.SINGLE,
+        discarded_slices=0,
+        num_slices=1,
+    )
+
+    # prepare_dl = True
+
+    # Save preprocessing JSON file
+
+    write_preprocessing(
+        preprocessing=preprocessing,
+        extraction=extraction,
+        caps_directory=generated_caps_directory,
+    )
     write_missing_mods(generated_caps_directory, data_df)
 
     logger.info(f"Shepplogan dataset was generated at {generated_caps_directory}")

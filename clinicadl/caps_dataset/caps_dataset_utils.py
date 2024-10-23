@@ -56,53 +56,6 @@ def read_json(json_path: Path) -> Dict[str, Any]:
         parameters["deterministic"] = not parameters["nondeterministic"]
         del parameters["nondeterministic"]
 
-    # Build preprocessing_dict
-    if "preprocessing_dict" not in parameters:
-        parameters["preprocessing_dict"] = {"mode": parameters["mode"]}
-        preprocessing_options = [
-            "preprocessing",
-            "use_uncropped_image",
-            "prepare_dl",
-            "custom_suffix",
-            "tracer",
-            "suvr_reference_region",
-            "patch_size",
-            "stride_size",
-            "slice_direction",
-            "slice_mode",
-            "discarded_slices",
-            "roi_list",
-            "uncropped_roi",
-            "roi_custom_suffix",
-            "roi_custom_template",
-            "roi_custom_mask_pattern",
-        ]
-        for preprocessing_var in preprocessing_options:
-            if preprocessing_var in parameters:
-                parameters["preprocessing_dict"][preprocessing_var] = parameters[
-                    preprocessing_var
-                ]
-                del parameters[preprocessing_var]
-
-    # Add missing parameters in previous version of extract
-    if "use_uncropped_image" not in parameters["preprocessing_dict"]:
-        parameters["preprocessing_dict"]["use_uncropped_image"] = False
-
-    if (
-        "prepare_dl" not in parameters["preprocessing_dict"]
-        and parameters["mode"] != "image"
-    ):
-        parameters["preprocessing_dict"]["prepare_dl"] = False
-
-    if (
-        parameters["mode"] == "slice"
-        and "slice_mode" not in parameters["preprocessing_dict"]
-    ):
-        parameters["preprocessing_dict"]["slice_mode"] = "rgb"
-
-    if "preprocessing" not in parameters:
-        parameters["preprocessing"] = parameters["preprocessing_dict"]["preprocessing"]
-
     from clinicadl.caps_dataset.caps_dataset_config import CapsDatasetConfig
 
     config = CapsDatasetConfig.from_preprocessing_and_extraction_method(
@@ -110,8 +63,7 @@ def read_json(json_path: Path) -> Dict[str, Any]:
         preprocessing_type=parameters["preprocessing"],
         **parameters,
     )
-    if "file_type" not in parameters["preprocessing_dict"]:
-        file_type = config.preprocessing.get_filetype()
-        parameters["preprocessing_dict"]["file_type"] = file_type.model_dump()
+
+    file_type = config.preprocessing.get_filetype()
 
     return parameters

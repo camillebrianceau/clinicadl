@@ -154,7 +154,6 @@ class MapsManager:
         mandatory_arguments = [
             "caps_directory",
             "tsv_path",
-            "preprocessing_dict",
             "mode",
             "network_task",
         ]
@@ -216,14 +215,22 @@ class MapsManager:
                 self.network_task, train_df, self.label
             )
 
+        from clinicadl.caps_dataset.utils import (
+            get_preprocessing_and_mode_from_parameters,
+        )
+
+        preprocessing, extraction = get_preprocessing_and_mode_from_parameters(
+            **parameters
+        )
         full_dataset = return_dataset(
-            self.caps_directory,
-            train_df,
-            self.preprocessing_dict,
+            input_dir=self.caps_directory,
+            data_df=train_df,
+            preprocessing=preprocessing,
+            extraction=extraction,
+            transforms=transfo_config,
             multi_cohort=self.multi_cohort,
             label=self.label,
             label_code=self.parameters["label_code"],
-            transforms_config=transfo_config,
         )
         self.parameters.update(
             {

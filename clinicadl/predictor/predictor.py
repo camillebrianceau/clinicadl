@@ -152,11 +152,17 @@ class Predictor:
         assert isinstance(self._config, PredictConfig)
         # assert self._config.data.label
 
+        from clinicadl.caps_dataset.utils import get_preprocessing_and_mode_from_json
+
+        preprocessing, extraction = get_preprocessing_and_mode_from_json(
+            self._config.maps_manager.maps_dir / "maps.json"
+        )
         data_test = return_dataset(
-            group_parameters["caps_directory"],
-            group_df,
-            self.maps_manager.preprocessing_dict,
-            transforms_config=self._config.transforms,
+            input_dir=group_parameters["caps_directory"],
+            data_df=group_df,
+            preprocessing=preprocessing,
+            extraction=extraction,
+            transforms=self._config.transforms,
             multi_cohort=group_parameters["multi_cohort"],
             label_presence=self._config.data.use_labels,
             label=self._config.data.label,
@@ -398,11 +404,20 @@ class Predictor:
             df_group, parameters_group = self.get_group_info(
                 self._config.maps_manager.data_group, split
             )
+            from clinicadl.caps_dataset.utils import (
+                get_preprocessing_and_mode_from_json,
+            )
+
+            preprocessing, extraction = get_preprocessing_and_mode_from_json(
+                self._config.maps_manager.maps_dir / "maps.json"
+            )
+
             data_test = return_dataset(
-                parameters_group["caps_directory"],
-                df_group,
-                self.maps_manager.preprocessing_dict,
-                transforms_config=transforms,
+                input_dir=parameters_group["caps_directory"],
+                data_df=df_group,
+                preprocessing=preprocessing,
+                extraction=extraction,
+                transforms=transforms,
                 multi_cohort=parameters_group["multi_cohort"],
                 label_presence=False,
                 label_code=self.maps_manager.label_code,

@@ -22,7 +22,8 @@ class ExtractionConfig(BaseModel):
 
     extract_method: ExtractionMethod
     save_features: bool = False
-    extract_json: Optional[str] = None
+    extract_json: str
+    use_uncropped_image: bool = True
 
     # pydantic config
     model_config = ConfigDict(validate_assignment=True)

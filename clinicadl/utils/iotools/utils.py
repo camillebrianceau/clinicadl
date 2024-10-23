@@ -1,8 +1,12 @@
 import errno
 import json
 from copy import copy
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
+
+from clinicadl.caps_dataset.extraction.config import ExtractionConfig
+from clinicadl.caps_dataset.preprocessing.config import PreprocessingConfig
 
 
 def path_encoder(obj):
@@ -74,12 +78,14 @@ def path_decoder(obj):
 
 
 def write_preprocessing(
-    preprocessing_dict: Dict[str, Any], caps_directory: Path
+    preprocessing: PreprocessingConfig,
+    extraction: ExtractionConfig,
+    caps_directory: Path,
 ) -> Path:
     extract_dir = caps_directory / "tensor_extraction"
     extract_dir.mkdir(parents=True, exist_ok=True)
 
-    json_path = extract_dir / preprocessing_dict["extract_json"]
+    json_path = extract_dir / extraction.extract_json
 
     if json_path.is_file():
         raise FileExistsError(
@@ -87,12 +93,14 @@ def write_preprocessing(
             f"Please choose another name for your preprocessing file."
         )
 
+    dict_ = preprocessing.model_dump()
+    dict_.update(extraction.model_dump())
     with json_path.open(mode="w") as json_file:
-        json.dump(preprocessing_dict, json_file, default=path_encoder)
+        json.dump(dict_, json_file, default=path_encoder)
     return json_path
 
 
-def read_preprocessing(json_path: Path) -> Dict[str, Any]:
+def read_json(json_path: Path) -> Dict[str, Any]:
     if json_path.suffix != ".json":
         json_path = json_path.with_suffix(".json")
 
@@ -101,7 +109,7 @@ def read_preprocessing(json_path: Path) -> Dict[str, Any]:
 
     try:
         with json_path.open(mode="r") as f:
-            preprocessing_dict = json.load(f)
+            dict_ = json.load(f)
     except IOError as e:
         raise IOError(f"Error reading json preprocessing file {json_path}: {e}")
-    return preprocessing_dict
+    return dict_

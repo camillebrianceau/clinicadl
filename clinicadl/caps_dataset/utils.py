@@ -42,24 +42,15 @@ def get_preprocessing_and_mode_from_json(json_path: Path):
     Tuple[Preprocessing, SliceMode]
         The preprocessing and mode extracted from the json file.
     """
-    from clinicadl.utils.iotools.utils import read_preprocessing
+    from clinicadl.utils.iotools.utils import read_json
 
-    preprocessing_dict = read_preprocessing(json_path)
-    preprocessing = Preprocessing(preprocessing_dict["preprocessing"])
-    mode = ExtractionMethod(preprocessing_dict["mode"])
-    return get_preprocessing(preprocessing)(**preprocessing_dict), get_extraction(mode)(
-        **preprocessing_dict
-    )
+    dict_ = read_json(json_path)
+    return get_preprocessing_and_mode_from_parameters(**dict_)
 
 
 def get_preprocessing_and_mode_from_parameters(**kwargs):
     """
     Extracts the preprocessing and mode from a json file.
-
-    Parameters
-    ----------
-    json_path : Path
-        Path to the json file containing the preprocessing and mode.
 
     Returns
     -------

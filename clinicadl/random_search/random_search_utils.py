@@ -7,7 +7,7 @@ import toml
 from clinicadl.utils.enum import Task
 from clinicadl.utils.exceptions import ClinicaDLConfigurationError
 from clinicadl.utils.iotools.train_utils import extract_config_from_toml_file
-from clinicadl.utils.iotools.utils import path_decoder, read_preprocessing
+from clinicadl.utils.iotools.utils import path_decoder, read_json
 
 
 def get_space_dict(launch_directory: Path) -> Dict[str, Any]:
@@ -61,7 +61,7 @@ def get_space_dict(launch_directory: Path) -> Dict[str, Any]:
         / space_dict.pop("preprocessing_json")
     )
 
-    preprocessing_dict = read_preprocessing(preprocessing_json)
+    preprocessing_dict = read_json(preprocessing_json)
     train_default["preprocessing_dict"] = preprocessing_dict
     train_default["mode"] = preprocessing_dict["mode"]
 

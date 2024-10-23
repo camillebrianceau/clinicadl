@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional, Tuple, Union
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, computed_field, field_validator
 
+from clinicadl.caps_dataset.utils import get_preprocessing_and_mode_from_json
 from clinicadl.utils.enum import Mode
 from clinicadl.utils.exceptions import (
     ClinicaDLArgumentError,
@@ -12,7 +13,6 @@ from clinicadl.utils.exceptions import (
 )
 from clinicadl.utils.iotools.clinica_utils import check_caps_folder
 from clinicadl.utils.iotools.data_utils import check_multi_cohort_tsv, load_data_test
-from clinicadl.utils.iotools.utils import read_preprocessing
 
 logger = getLogger("clinicadl.data_config")
 
@@ -105,61 +105,3 @@ class DataConfig(BaseModel):  # TODO : put in data module
             caps_dict = {"single": self.caps_directory}
 
         return caps_dict
-
-    @computed_field
-    @property
-    def preprocessing_dict(self) -> Dict[str, Any]:
-        """
-        Gets the preprocessing dictionary from a preprocessing json file.
-
-        Returns
-        -------
-        Dict[str, Any]
-            The preprocessing dictionary.
-
-        Raises
-        ------
-        ValueError
-            In case of multi-cohort dataset, if no preprocessing file is found in any CAPS.
-        """
-        from clinicadl.caps_dataset.data import CapsDataset
-
-        if self.preprocessing_json is not None:
-            if not self.multi_cohort:
-                preprocessing_json = (
-                    self.caps_directory / "tensor_extraction" / self.preprocessing_json
-                )
-            else:
-                caps_dict = self.caps_dict
-                json_found = False
-                for caps_name, caps_path in caps_dict.items():
-                    preprocessing_json = (
-                        caps_path / "tensor_extraction" / self.preprocessing_json
-                    )
-                    if preprocessing_json.is_file():
-                        logger.info(
-                            f"Preprocessing JSON {preprocessing_json} found in CAPS {caps_name}."
-                        )
-                        json_found = True
-                if not json_found:
-                    raise ValueError(
-                        f"Preprocessing JSON {self.preprocessing_json} was not found for any CAPS "
-                        f"in {caps_dict}."
-                    )
-
-            preprocessing_dict = read_preprocessing(preprocessing_json)
-
-            if (
-                preprocessing_dict["mode"] == "roi"
-                and "roi_background_value" not in preprocessing_dict
-            ):
-                preprocessing_dict["roi_background_value"] = 0
-
-            return preprocessing_dict
-        else:
-            return None
-
-    @computed_field
-    @property
-    def mode(self) -> Mode:
-        return Mode(self.preprocessing_dict["mode"])
