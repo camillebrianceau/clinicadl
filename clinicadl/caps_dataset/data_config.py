@@ -5,7 +5,6 @@ from typing import Any, Dict, Optional, Tuple, Union
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, computed_field, field_validator
 
-from clinicadl.caps_dataset.utils import get_preprocessing_and_mode_from_json
 from clinicadl.utils.enum import Mode
 from clinicadl.utils.exceptions import (
     ClinicaDLArgumentError,
