@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict
 from clinicadl.utils.enum import (
     DTIMeasure,
     DTISpace,
+    ImageModality,
     LinearModality,
     Preprocessing,
     SUVRReferenceRegions,
@@ -100,6 +101,9 @@ class PETPreprocessingConfig(PreprocessingConfig):
         )
         return file_type
 
+    def caps_nii(self) -> tuple:
+        return (self.preprocessing, ImageModality.PET)
+
     def get_filetype(self) -> FileType:
         if self.use_uncropped_image:
             description = ""
@@ -124,6 +128,9 @@ class CustomPreprocessingConfig(PreprocessingConfig):
             description="Custom suffix",
         )
 
+    def caps_nii(self) -> tuple:
+        return (self.preprocessing, ImageModality.CUSTOM)
+
     def get_filetype(self) -> FileType:
         return self.bids_nii()
 
@@ -135,6 +142,9 @@ class DTIPreprocessingConfig(PreprocessingConfig):
 
     def bids_nii(self, reconstruction: Optional[str] = None) -> FileType:
         return FileType(pattern="dwi/sub-*_ses-*_dwi.nii*", description="DWI NIfTI")
+
+    def caps_nii(self) -> tuple:
+        return (self.preprocessing, ImageModality.DWI)
 
     def get_filetype(self) -> FileType:
         """Return the query dict required to capture DWI DTI images.
