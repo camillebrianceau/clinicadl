@@ -21,7 +21,6 @@ class ExtractionConfig(BaseModel):
     """
 
     extract_method: ExtractionMethod
-    file_type: Optional[FileType] = None
     save_features: bool = False
     extract_json: Optional[str] = None
 

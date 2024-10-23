@@ -63,7 +63,7 @@ class QCDataset(Dataset):
         session = self.df.loc[idx, "session_id"]
 
         if self.use_extracted_tensors:
-            file_type = self.config.extraction.file_type
+            file_type = self.config.preprocessing.file_type
             file_type.pattern = Path(str(file_type.pattern).replace(".nii.gz", ".pt"))
             image_output = clinicadl_file_reader(
                 [subject], [session], self.img_dir, file_type.model_dump()

@@ -228,7 +228,7 @@ class CapsDataset(Dataset):
             image_path = self._get_image_path(participant_id, session_id, cohort)
             image = torch.load(image_path, weights_only=True)
         except IndexError:
-            file_type = self.config.extraction.file_type
+            file_type = self.config.preprocessing.file_type
             results = clinicadl_file_reader(
                 [participant_id],
                 [session_id],
