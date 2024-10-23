@@ -7,7 +7,6 @@ import torchio as tio
 from joblib import Parallel, delayed
 
 from clinicadl.caps_dataset.caps_dataset_config import CapsDatasetConfig
-from clinicadl.caps_dataset.caps_dataset_utils import find_file_type
 from clinicadl.commandline import arguments
 from clinicadl.commandline.modules_options import (
     data,
@@ -87,7 +86,7 @@ def cli(generated_caps_directory, **kwargs):
     (generated_caps_directory / "subjects").mkdir(parents=True, exist_ok=True)
 
     # Find appropriate preprocessing file type
-    file_type = find_file_type(caps_config)
+    file_type = caps_config.preprocessing.get_filetype()
 
     def create_artifacts_image(data_idx: int) -> pd.DataFrame:
         participant_id = data_df.at[data_idx, "participant_id"]

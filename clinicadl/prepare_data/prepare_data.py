@@ -6,7 +6,6 @@ from joblib import Parallel, delayed
 from torch import save as save_tensor
 
 from clinicadl.caps_dataset.caps_dataset_config import CapsDatasetConfig
-from clinicadl.caps_dataset.caps_dataset_utils import compute_folder_and_file_type
 from clinicadl.caps_dataset.extraction.config import (
     ExtractionConfig,
     ExtractionImageConfig,
@@ -71,7 +70,9 @@ def DeepLearningPrepareData(
         f"Selected images are preprocessed with {config.preprocessing} pipeline`."
     )
 
-    mod_subfolder, file_type = compute_folder_and_file_type(config, from_bids)
+    mod_subfolder, file_type = config.preprocessing.compute_folder_and_file_type(
+        from_bids
+    )
 
     # Input file:
     input_files = clinicadl_file_reader(

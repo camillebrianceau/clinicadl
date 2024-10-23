@@ -8,7 +8,6 @@ from joblib import Parallel, delayed
 from nilearn.image import resample_to_img
 
 from clinicadl.caps_dataset.caps_dataset_config import CapsDatasetConfig
-from clinicadl.caps_dataset.caps_dataset_utils import find_file_type
 from clinicadl.commandline import arguments
 from clinicadl.commandline.modules_options import data, dataloader, preprocessing
 from clinicadl.commandline.pipelines.generate.hypometabolic import (
@@ -84,8 +83,7 @@ def cli(generated_caps_directory, **kwargs):
     (generated_caps_directory / "subjects").mkdir(parents=True, exist_ok=True)
 
     # Find appropriate preprocessing file type
-    file_type = find_file_type(caps_config)
-
+    file_type = caps_config.preprocessing.get_filetype()
     mask_path = get_mask_path(generate_config.pathology)
 
     mask_nii = nib.loadsave.load(mask_path)

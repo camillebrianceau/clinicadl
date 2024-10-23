@@ -9,7 +9,6 @@ import torch
 from torch.utils.data import Dataset
 
 from clinicadl.caps_dataset.caps_dataset_config import CapsDatasetConfig
-from clinicadl.caps_dataset.caps_dataset_utils import compute_folder_and_file_type
 from clinicadl.caps_dataset.preprocessing.utils import linear_nii
 from clinicadl.utils.enum import Preprocessing
 from clinicadl.utils.exceptions import ClinicaDLException
@@ -71,7 +70,7 @@ class QCDataset(Dataset):
             )[0]
             image_path = Path(image_output[0])
             image_filename = image_path.name
-            folder, _ = compute_folder_and_file_type(config=self.config)
+            folder, _ = self.config.preprocessing.compute_folder_and_file_type()
             image_dir = (
                 self.img_dir
                 / "subjects"

@@ -89,39 +89,3 @@ class CapsDatasetConfig(BaseModel):
             extraction=get_extraction(ExtractionMethod(extraction))(**kwargs),
             transforms=TransformsConfig(**kwargs),
         )
-
-    def compute_folder_and_file_type(
-        self, from_bids: Optional[Path] = None
-    ) -> Tuple[str, FileType]:
-        preprocessing = self.preprocessing.preprocessing
-        if from_bids is not None:
-            if isinstance(self.preprocessing, CustomPreprocessingConfig):
-                mod_subfolder = Preprocessing.CUSTOM.value
-                file_type = FileType(
-                    pattern=f"*{self.preprocessing.custom_suffix}",
-                    description="Custom suffix",
-                )
-            else:
-                mod_subfolder = preprocessing
-                file_type = bids_nii(self.preprocessing)
-
-        elif preprocessing not in Preprocessing:
-            raise NotImplementedError(
-                f"Extraction of preprocessing {preprocessing} is not implemented from CAPS directory."
-            )
-        else:
-            mod_subfolder = preprocessing.value.replace("-", "_")
-            if isinstance(self.preprocessing, T1PreprocessingConfig) or isinstance(
-                self.preprocessing, FlairPreprocessingConfig
-            ):
-                file_type = linear_nii(self.preprocessing)
-            elif isinstance(self.preprocessing, PETPreprocessingConfig):
-                file_type = pet_linear_nii(self.preprocessing)
-            elif isinstance(self.preprocessing, DTIPreprocessingConfig):
-                file_type = dwi_dti(self.preprocessing)
-            elif isinstance(self.preprocessing, CustomPreprocessingConfig):
-                file_type = FileType(
-                    pattern=f"*{self.preprocessing.custom_suffix}",
-                    description="Custom suffix",
-                )
-        return mod_subfolder, file_type
