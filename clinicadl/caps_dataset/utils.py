@@ -61,8 +61,9 @@ def get_preprocessing_and_mode_from_parameters(**kwargs):
     if "preprocessing_dict" in kwargs:
         kwargs = kwargs["preprocessing_dict"]
 
+    print(kwargs)
     preprocessing = Preprocessing(kwargs["preprocessing"])
-    mode = ExtractionMethod(kwargs["mode"])
+    mode = ExtractionMethod(kwargs["extract_method"])
     return get_preprocessing(preprocessing)(**kwargs), get_extraction(mode)(**kwargs)
 
 

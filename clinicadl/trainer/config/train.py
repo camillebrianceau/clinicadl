@@ -12,6 +12,8 @@ from pydantic import (
 from clinicadl.callbacks.config import CallbacksConfig
 from clinicadl.caps_dataset.data_config import DataConfig
 from clinicadl.caps_dataset.dataloader_config import DataLoaderConfig
+from clinicadl.caps_dataset.extraction.config import ALL_EXTRACTION_TYPES
+from clinicadl.caps_dataset.preprocessing.config import ALL_PREPROCESSING_TYPES
 from clinicadl.config.config.lr_scheduler import LRschedulerConfig
 from clinicadl.config.config.reproducibility import ReproducibilityConfig
 from clinicadl.maps_manager.config import MapsManagerConfig
@@ -42,9 +44,11 @@ class TrainConfig(BaseModel, ABC):
     data: DataConfig
     dataloader: DataLoaderConfig
     early_stopping: EarlyStoppingConfig
+    extraction: ALL_EXTRACTION_TYPES
     lr_scheduler: LRschedulerConfig
     maps_manager: MapsManagerConfig
     model: NetworkConfig
+    preprocessing: ALL_PREPROCESSING_TYPES
     optimization: OptimizationConfig
     optimizer: OptimizerConfig
     reproducibility: ReproducibilityConfig
@@ -54,6 +58,9 @@ class TrainConfig(BaseModel, ABC):
     validation: ValidationConfig
     # pydantic config
     model_config = ConfigDict(validate_assignment=True)
+
+    # @field_validator("preprocessing", mode="before")
+    # def check_preprocessing(cls, v: str):
 
     @computed_field
     @property
@@ -68,9 +75,11 @@ class TrainConfig(BaseModel, ABC):
             data=kwargs,
             dataloader=kwargs,
             early_stopping=kwargs,
+            extraction=kwargs,
             lr_scheduler=kwargs,
             maps_manager=kwargs,
             model=kwargs,
+            preprocessing=kwargs,
             optimization=kwargs,
             optimizer=kwargs,
             reproducibility=kwargs,
@@ -87,9 +96,11 @@ class TrainConfig(BaseModel, ABC):
         self.data.__dict__.update(config_dict)
         self.dataloader.__dict__.update(config_dict)
         self.early_stopping.__dict__.update(config_dict)
+        self.extraction.__dict__.update(config_dict)
         self.lr_scheduler.__dict__.update(config_dict)
         self.maps_manager.__dict__.update(config_dict)
         self.model.__dict__.update(config_dict)
+        self.preprocessing.__dict__.update(config_dict)
         self.optimization.__dict__.update(config_dict)
         self.optimizer.__dict__.update(config_dict)
         self.reproducibility.__dict__.update(config_dict)

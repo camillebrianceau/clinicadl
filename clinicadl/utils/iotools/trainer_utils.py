@@ -1,6 +1,16 @@
 from pathlib import Path
 
 
+def read_multi_level_dict(dict_):
+    parameters = {}
+    for key in dict_:
+        if isinstance(dict_[key], dict):
+            parameters.update(dict_[key])
+        else:
+            parameters[key] = dict_[key]
+    return parameters
+
+
 def create_parameters_dict(config):
     parameters = {}
     config_dict = config.model_dump()
@@ -20,7 +30,6 @@ def create_parameters_dict(config):
     if parameters["data_augmentation"] == ():
         parameters["data_augmentation"] = False
 
-    del parameters["preprocessing_json"]
     # if "tsv_path" in parameters:
     #     parameters["tsv_path"] = parameters["tsv_path"]
     #     del parameters["tsv_path"]

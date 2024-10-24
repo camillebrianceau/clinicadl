@@ -1,4 +1,5 @@
 from logging import getLogger
+from pathlib import Path
 from time import time
 from typing import List, Optional, Tuple, Union
 
@@ -31,6 +32,10 @@ class ExtractionConfig(BaseModel):
 
     @field_validator("extract_json", mode="before")
     def compute_extract_json(cls, v: str):
+        if isinstance(v, Path):
+            v = str(v)
+        elif isinstance(v, bool):
+            v = None
         if v is None:
             return f"extract_{int(time())}.json"
         elif not v.endswith(".json"):
@@ -75,3 +80,11 @@ class ExtractionROIConfig(ExtractionConfig):
     roi_custom_mask_pattern: str = ""
     roi_background_value: int = 0
     extract_method: ExtractionMethod = ExtractionMethod.ROI
+
+
+ALL_EXTRACTION_TYPES = Union[
+    ExtractionImageConfig,
+    ExtractionROIConfig,
+    ExtractionSliceConfig,
+    ExtractionPatchConfig,
+]

@@ -125,8 +125,11 @@ class Trainer:
         config_dict = patch_to_read_json(read_json(config_file))  # TODO : remove patch
         config_dict["maps_dir"] = maps_path
         config_dict["split"] = split if split else ()
+
+        from clinicadl.utils.iotools.trainer_utils import read_multi_level_dict
+
         config_object = create_training_config(config_dict["network_task"])(
-            **config_dict
+            **read_multi_level_dict(config_dict)
         )
         return cls(config_object)
 

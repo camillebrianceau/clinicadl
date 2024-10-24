@@ -1,7 +1,7 @@
 import abc
 from logging import getLogger
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 from pydantic import BaseModel, ConfigDict
 
@@ -207,3 +207,13 @@ class T2PreprocessingConfig(PreprocessingConfig):
 
     def get_filetype(self) -> FileType:
         return self.linear_nii()
+
+
+ALL_PREPROCESSING_TYPES = Union[
+    T1PreprocessingConfig,
+    T2PreprocessingConfig,
+    FlairPreprocessingConfig,
+    PETPreprocessingConfig,
+    CustomPreprocessingConfig,
+    DTIPreprocessingConfig,
+]

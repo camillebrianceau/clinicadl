@@ -154,7 +154,6 @@ class MapsManager:
         mandatory_arguments = [
             "caps_directory",
             "tsv_path",
-            "mode",
             "network_task",
         ]
         for arg in mandatory_arguments:
