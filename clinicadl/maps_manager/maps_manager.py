@@ -221,6 +221,8 @@ class MapsManager:
         preprocessing, extraction = get_preprocessing_and_mode_from_parameters(
             **parameters
         )
+        print(preprocessing)
+        print(extraction)
         full_dataset = return_dataset(
             input_dir=self.caps_directory,
             data_df=train_df,

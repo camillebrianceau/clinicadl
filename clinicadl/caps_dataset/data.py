@@ -141,7 +141,7 @@ class CapsDataset(Dataset):
 
         # Try to find .nii.gz file
         try:
-            folder, file_type = self.config.preprocessing.compute_folder_and_file_type()
+            folder, file_type = self.preprocessing.compute_folder_and_file_type()
 
             results = clinicadl_file_reader(
                 [participant],
@@ -165,7 +165,7 @@ class CapsDataset(Dataset):
             image_path = image_dir / image_filename
         # Try to find .pt file
         except ClinicaDLCAPSError:
-            folder, file_type = self.config.preprocessing.compute_folder_and_file_type()
+            folder, file_type = self.preprocessing.compute_folder_and_file_type()
             file_type.pattern = file_type.pattern.replace(".nii.gz", ".pt")
             results = clinicadl_file_reader(
                 [participant],
@@ -235,7 +235,7 @@ class CapsDataset(Dataset):
             image_path = self._get_image_path(participant_id, session_id, cohort)
             image = torch.load(image_path, weights_only=True)
         except IndexError:
-            file_type = self.config.preprocessing.file_type
+            file_type = self.preprocessing.file_type
             results = clinicadl_file_reader(
                 [participant_id],
                 [session_id],
@@ -333,10 +333,10 @@ class CapsDatasetImage(CapsDataset):
         image_path = self._get_image_path(participant, session, cohort)
         image = torch.load(image_path, weights_only=True)
 
-        train_trf, trf = self.config.transforms.get_transforms()
+        train_trf, trf = self.transforms.get_transforms()
 
         image = trf(image)
-        if self.config.transforms.train_transformations and not self.eval_mode:
+        if self.transforms.train_transformations and not self.eval_mode:
             image = train_trf(image)
 
         sample = {
@@ -421,10 +421,10 @@ class CapsDatasetPatch(CapsDataset):
                 patch_idx,
             )
 
-        train_trf, trf = self.config.transforms.get_transforms()
+        train_trf, trf = self.transforms.get_transforms()
         patch_tensor = trf(patch_tensor)
 
-        if self.config.transforms.train_transformations and not self.eval_mode:
+        if self.transforms.train_transformations and not self.eval_mode:
             patch_tensor = train_trf(patch_tensor)
 
         sample = {
@@ -546,11 +546,11 @@ class CapsDatasetRoi(CapsDataset):
                 image, mask_array, self.extraction.roi_uncrop_output
             )
 
-        train_trf, trf = self.config.transforms.get_transforms()
+        train_trf, trf = self.transforms.get_transforms()
 
         roi_tensor = trf(roi_tensor)
 
-        if self.config.transforms.train_transformations and not self.eval_mode:
+        if self.transforms.train_transformations and not self.eval_mode:
             roi_tensor = train_trf(roi_tensor)
 
         sample = {
@@ -706,11 +706,11 @@ class CapsDatasetSlice(CapsDataset):
                 slice_idx,
             )
 
-        train_trf, trf = self.config.transforms.get_transforms()
+        train_trf, trf = self.transforms.get_transforms()
 
         slice_tensor = trf(slice_tensor)
 
-        if self.config.transforms.train_transformations and not self.eval_mode:
+        if self.transforms.train_transformations and not self.eval_mode:
             slice_tensor = train_trf(slice_tensor)
 
         sample = {

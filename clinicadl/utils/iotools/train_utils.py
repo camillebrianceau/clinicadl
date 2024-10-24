@@ -9,7 +9,7 @@ from click.core import ParameterSource
 from clinicadl.utils.enum import Task
 from clinicadl.utils.exceptions import ClinicaDLConfigurationError
 from clinicadl.utils.iotools.maps_manager_utils import remove_unused_tasks
-from clinicadl.utils.iotools.utils import path_decoder
+from clinicadl.utils.iotools.utils import path_decoder, read_json
 
 
 def extract_config_from_toml_file(config_file: Path, task: Task) -> Dict[str, Any]:
@@ -184,6 +184,14 @@ def merge_cli_and_config_file_options(task: Task, **kwargs) -> Dict[str, Any]:
             task,
         )
     del kwargs["config_file"]
+    if kwargs["preprocessing_json"]:
+        preprocessing_dict = read_json(
+            kwargs["caps_directory"]
+            / "tensor_extraction"
+            / kwargs["preprocessing_json"]
+        )
+        options.update(preprocessing_dict)
+    # kwargs["preprocessing_json"] = options["preprocessing_json"]
     for arg in kwargs:
         if (
             click.get_current_context().get_parameter_source(arg)

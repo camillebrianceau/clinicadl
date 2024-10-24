@@ -26,6 +26,7 @@ from clinicadl.trainer.config.classification import ClassificationConfig
 from clinicadl.trainer.trainer import Trainer
 from clinicadl.utils.enum import Task
 from clinicadl.utils.iotools.train_utils import merge_cli_and_config_file_options
+from clinicadl.utils.iotools.utils import read_json
 
 
 @click.command(name="classification", no_args_is_help=True)
@@ -107,6 +108,7 @@ def cli(**kwargs):
 
     options = merge_cli_and_config_file_options(Task.CLASSIFICATION, **kwargs)
     config = ClassificationConfig(**options)
+    print(config)
     trainer = Trainer(config)
 
     trainer.train(split_list=config.split.split, overwrite=True)
