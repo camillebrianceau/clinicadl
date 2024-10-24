@@ -543,7 +543,7 @@ class CapsDatasetRoi(CapsDataset):
             image = torch.load(image_path, weights_only=True)
             mask_array = self.mask_arrays[roi_idx]
             roi_tensor = extract_roi_tensor(
-                image, mask_array, self.extraction.uncropped_roi
+                image, mask_array, self.extraction.roi_uncrop_output
             )
 
         train_trf, trf = self.config.transforms.get_transforms()
@@ -781,7 +781,7 @@ def return_dataset(
         label_code=label_code,
         multi_cohort=multi_cohort,
     )
-    config.transforms = transforms_config
+    config.transforms = transforms
 
     if isinstance(extraction, ExtractionImageConfig):
         return CapsDatasetImage(

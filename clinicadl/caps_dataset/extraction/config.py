@@ -1,10 +1,11 @@
 from logging import getLogger
 from time import time
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 from pydantic import BaseModel, ConfigDict, field_validator
 from pydantic.types import NonNegativeInt
 
+from clinicadl.prepare_data.prepare_data_utils import compute_discarded_slices
 from clinicadl.utils.enum import (
     ExtractionMethod,
     SliceDirection,
@@ -22,7 +23,7 @@ class ExtractionConfig(BaseModel):
 
     extract_method: ExtractionMethod
     save_features: bool = False
-    extract_json: str
+    extract_json: Optional[str] = None
     use_uncropped_image: bool = True
 
     # pydantic config
@@ -52,8 +53,19 @@ class ExtractionSliceConfig(ExtractionConfig):
     slice_direction: SliceDirection = SliceDirection.SAGITTAL
     slice_mode: SliceMode = SliceMode.RGB
     num_slices: Optional[NonNegativeInt] = None
-    discarded_slices: Tuple[NonNegativeInt, NonNegativeInt] = (0, 0)
+    discarded_slices: Union[int, tuple] = (0,)
     extract_method: ExtractionMethod = ExtractionMethod.SLICE
+
+    @field_validator("slice_direction", mode="before")
+    def check_slice_direction(cls, v: str):
+        if isinstance(v, int):
+            return SliceDirection(str(v))
+
+    @field_validator("discarded_slices", mode="before")
+    def compute_discarded_slice(
+        cls, v: Union[int, tuple]
+    ) -> tuple[NonNegativeInt, NonNegativeInt]:
+        return compute_discarded_slices(v)
 
 
 class ExtractionROIConfig(ExtractionConfig):

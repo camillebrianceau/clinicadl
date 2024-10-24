@@ -56,14 +56,4 @@ def read_json(json_path: Path) -> Dict[str, Any]:
         parameters["deterministic"] = not parameters["nondeterministic"]
         del parameters["nondeterministic"]
 
-    from clinicadl.caps_dataset.caps_dataset_config import CapsDatasetConfig
-
-    config = CapsDatasetConfig.from_preprocessing_and_extraction_method(
-        extraction=parameters["mode"],
-        preprocessing_type=parameters["preprocessing"],
-        **parameters,
-    )
-
-    file_type = config.preprocessing.get_filetype()
-
     return parameters
