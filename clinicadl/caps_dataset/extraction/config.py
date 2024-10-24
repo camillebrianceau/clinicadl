@@ -58,7 +58,7 @@ class ExtractionSliceConfig(ExtractionConfig):
     slice_direction: SliceDirection = SliceDirection.SAGITTAL
     slice_mode: SliceMode = SliceMode.RGB
     num_slices: Optional[NonNegativeInt] = None
-    discarded_slices: Union[int, tuple] = (0,)
+    discarded_slices: Union[int, Tuple] = (0,)
     extract_method: ExtractionMethod = ExtractionMethod.SLICE
 
     @field_validator("slice_direction", mode="before")
@@ -67,7 +67,7 @@ class ExtractionSliceConfig(ExtractionConfig):
             return SliceDirection(str(v))
 
     @field_validator("discarded_slices", mode="before")
-    def compute_discarded_slice(cls, v: Union[int, tuple]) -> Tuple[int, int]:
+    def compute_discarded_slice(cls, v: Union[int, Tuple]) -> Tuple[int, int]:
         return compute_discarded_slices(v)
 
 
