@@ -62,7 +62,7 @@ class ExtractionSliceConfig(ExtractionConfig):
             return SliceDirection(str(v))
 
     @field_validator("discarded_slices", mode="before")
-    def compute_discarded_slice(cls, v: Union[int, tuple]) -> tuple[int, int]:
+    def compute_discarded_slice(cls, v: Union[int, tuple]) -> Tuple[int, int]:
         return compute_discarded_slices(v)
 
 
